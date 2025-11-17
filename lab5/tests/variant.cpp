@@ -1,8 +1,14 @@
+/* Test file for variant task.
+ * @file
+ * @date 2018-08-12
+ * @author Anonymous
+ */
+
 #include <catch2/catch_all.hpp>
 
 #include <string>
 
-#include "variant.hpp"
+#include <variant.hpp>
 
 TEST_CASE("variant::number")
 {
@@ -23,7 +29,7 @@ TEST_CASE("variant::array")
 
 TEST_CASE("variant::recursive_array")
 {
-    recursive_array arr = {1, 2.2f, std::make_shared<recursive_array>(recursive_array{3, 7.9f, -8}), 9};
+    recursive_array arr = {1, 2.2f, std::shared_ptr<recursive_array>(new recursive_array{3, 7.9f, -8}), 9};
     CHECK(std::get<float>(std::get<number>(arr[1])) == Catch::Approx(2.2f));
     CHECK(std::get<int>(std::get<number>(std::get<std::shared_ptr<recursive_array>>(arr[2])->operator[](2))) == -8);
     CHECK(std::get<int>(std::get<number>(arr[3])) == 9);
@@ -44,7 +50,7 @@ TEST_CASE("variant::recursive_array2")
 
 TEST_CASE("variant::variant_decorator")
 {
-    variant_decorator<std::string, float, int> v{86};
+    variant_decorator<std::string, float, int, boost::recursive_wrapper<bool>> v{86};
     CHECK(std::get<int>(v) == 86);
 
     SECTION("content")
@@ -66,6 +72,15 @@ TEST_CASE("variant::variant_decorator")
     {
         v.as<int>() = 53;
         CHECK(v.as<int>() == 53);
+    }
+
+    SECTION("recursive_wrapper")
+    {
+        v = boost::recursive_wrapper<bool>{true};
+        CHECK(v.as<bool>() == true);
+
+        const auto cv = v;
+        CHECK(cv.as<bool>() == true);
     }
 }
 

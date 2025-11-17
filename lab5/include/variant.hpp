@@ -1,3 +1,8 @@
+/* Variant classes.
+ * @file
+ * @date 2018-08-12
+ * @author Anonymous
+ */
 #ifndef __VARIANT_HPP__
 #define __VARIANT_HPP__
 
@@ -5,8 +10,10 @@
 #include <memory>
 #include <variant>
 #include <vector>
-
 #include <boost/variant.hpp>
+#include <boost/variant/recursive_wrapper.hpp>
+#include <string>
+#include <type_traits>
 
 //{ number
 using number = std::variant<int, float>;
@@ -17,89 +24,88 @@ using array = std::vector<number>;
 //}
 
 //{ recursive_array
-struct recursive_array;
-
-using recursive_array_base = std::variant<
-    number,
-    std::shared_ptr<recursive_array>
->;
-
-struct recursive_array : public std::vector<recursive_array_base>
+struct recursive_array : public std::vector<std::variant<number, std::shared_ptr<recursive_array>>>
 {
-    using std::vector<recursive_array_base>::vector;
+    using base = std::vector<std::variant<number, std::shared_ptr<recursive_array>>>;
+    using base::base;  
 };
 //}
 
 //{ recursive_array2
-struct recursive_array2;
-
-using recursive_array2_base = std::variant<
-    number,
-    boost::recursive_wrapper<recursive_array2>
->;
-
-struct recursive_array2 : public std::vector<recursive_array2_base>
+struct recursive_array2 : public std::vector<std::variant<number, boost::recursive_wrapper<recursive_array2>>>
 {
-    using std::vector<recursive_array2_base>::vector;
+    using base = std::vector<std::variant<number, boost::recursive_wrapper<recursive_array2>>>;
+    using base::base;
 };
 //}
 
-//{ recursive_map
-struct recursive_map;
-
-// Сначала объявляем variant_decorator как шаблон
-template<typename... Types>
-struct variant_decorator;
-
-// Затем объявляем recursive_map_value_base с forward declaration
-using recursive_map_value_base = variant_decorator<
-    int, 
-    float, 
-    bool, 
-    std::string,
-    boost::recursive_wrapper<recursive_map>
->;
-
-// Теперь определяем variant_decorator
+//{ variant_decorator
 template<typename... Types>
 struct variant_decorator : public std::variant<Types...>
 {
-    using std::variant<Types...>::variant;
+    using base = std::variant<Types...>;
+    using base::base;
 
     template<typename T>
     const T& as() const
     {
-        return std::get<T>(*this);
+        if constexpr (std::disjunction_v<std::is_same<T, Types>...>)
+        {
+            return std::get<T>(*this);
+        }
+        else if constexpr (std::disjunction_v<std::is_same<boost::recursive_wrapper<T>, Types>...>)
+        {
+            return std::get<boost::recursive_wrapper<T>>(*this).get();
+        }
+        else
+        {
+            static_assert(sizeof(T) == 0, "Type not supported");
+        }
     }
 
     template<typename T>
     T& as()
     {
-        return std::get<T>(*this);
+        if constexpr (std::disjunction_v<std::is_same<T, Types>...>)
+        {
+            return std::get<T>(*this);
+        }
+        else if constexpr (std::disjunction_v<std::is_same<boost::recursive_wrapper<T>, Types>...>)
+        {
+            return std::get<boost::recursive_wrapper<T>>(*this).get();
+        }
+        else
+        {
+            static_assert(sizeof(T) == 0, "Type not supported");
+        }
     }
 };
+//}
 
-// Теперь определяем recursive_map
-struct recursive_map : public std::map<std::string, recursive_map_value_base>
+//{ recursive_map
+using variant_value = variant_decorator<
+    std::string,
+    float,
+    int,
+    bool,
+    boost::recursive_wrapper<struct recursive_map>
+>;
+
+struct recursive_map : public std::map<std::string, variant_value>
 {
-    using std::map<std::string, recursive_map_value_base>::map;
+    using base = std::map<std::string, variant_value>;
+    using base::base;
+
+    variant_value& operator[](const std::string& key)
+    {
+        return base::operator[](key);
+    }
+
+    const variant_value& operator[](const std::string& key) const
+    {
+        return base::at(key);
+    }
 };
-
-// Специализация as() для recursive_map (с правильным синтаксисом)
-template<>
-template<>
-inline const recursive_map& variant_decorator<int, float, bool, std::string, boost::recursive_wrapper<recursive_map>>::as<recursive_map>() const
-{
-    // Извлекаем из variant boost::recursive_wrapper и возвращаем ссылку на recursive_map
-    return std::get<boost::recursive_wrapper<recursive_map>>(*this).get();
-}
-
-template<>
-template<>
-inline recursive_map& variant_decorator<int, float, bool, std::string, boost::recursive_wrapper<recursive_map>>::as<recursive_map>()
-{
-    return std::get<boost::recursive_wrapper<recursive_map>>(*this).get();
-}
 //}
 
 #endif // __VARIANT_HPP__
