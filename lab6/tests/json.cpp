@@ -3,7 +3,6 @@
  * @date 2018-08-09
  * @author Anonymous
  */
-
 #include <catch2/catch_all.hpp>
 
 #include <variant>
@@ -26,7 +25,7 @@ TEST_CASE("json::number")
 
 TEST_CASE("json::nullable")
 {
-    auto i = json::load_from_string<nullptr_t>("null", json::parser::nullable);
+    auto i = json::load_from_string<std::nullptr_t>("null", json::parser::nullable);
     CHECK(i == nullptr);
 }
 
@@ -47,7 +46,7 @@ TEST_CASE("json::array")
         CHECK(boost::get<std::string>(i[1]) == "er");
         CHECK(boost::get<int>(i[2]) == 123);
         CHECK(boost::get<float>(i[3]) == Catch::Approx(-58.2f));
-        CHECK(boost::get<nullptr_t>(i[4]) == nullptr);
+        CHECK(boost::get<std::nullptr_t>(i[4]) == nullptr);
         CHECK(boost::get<bool>(i[5]) == false);
     }
 
@@ -64,7 +63,7 @@ TEST_CASE("json::array")
         CHECK(boost::get<bool>(sub1[1]) == false);
         CHECK(boost::get<float>(sub1[2]) == Catch::Approx(-2.5f));
 
-        CHECK(boost::get<nullptr_t>(i[2]) == nullptr);
+        CHECK(boost::get<std::nullptr_t>(i[2]) == nullptr);
         CHECK(boost::get<std::string>(i[3]) == "abc");
     }
 }
@@ -78,7 +77,7 @@ TEST_CASE("json::object")
         CHECK(boost::get<int>(i["number"]) == 99);
         CHECK(boost::get<std::string>(i["string"]) == "text");
         CHECK(boost::get<bool>(i["boolean"]) == true);
-        CHECK(boost::get<nullptr_t>(i["null"]) == nullptr);
+        CHECK(boost::get<std::nullptr_t>(i["null"]) == nullptr);
 
         auto& subarray = boost::get<x3::forward_ast<json::types::array>>(i["array"]).get();
         CHECK(boost::get<int>(subarray[0]) == 1);
