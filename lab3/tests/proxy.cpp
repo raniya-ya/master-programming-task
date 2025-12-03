@@ -1,18 +1,10 @@
-/* Test file for proxy task.
- * @file
- * @date 2018-08-07
- * @author Anonymous
- */
-
 #include <catch2/catch_all.hpp>
-
 #include <string>
-
 #include <proxy.hpp>
 
 namespace
 {
-// used for tests
+
 struct my_struct
 {
     int i;

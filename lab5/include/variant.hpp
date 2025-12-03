@@ -1,8 +1,3 @@
-/* Variant classes.
- * @file
- * @date 2018-08-12
- * @author Anonymous
- */
 #ifndef __VARIANT_HPP__
 #define __VARIANT_HPP__
 

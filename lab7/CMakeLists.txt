@@ -1,8 +1,25 @@
-return() # Remove this line
-add_library(type_map INTERFACE)
-target_include_directories(type_map INTERFACE include)
+cmake_minimum_required(VERSION 3.10)
 
-file(GLOB TESTS tests/*.cpp)
-add_executable(tests_type_map ${TESTS})
-target_link_libraries(tests_type_map type_map Catch2::Catch2WithMain)
-catch_discover_tests(tests_type_map)
+project(typemap_project LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(typemap_lib INTERFACE)
+target_include_directories(typemap_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_executable(typemap_tests tests/type_map.cpp)
+target_link_libraries(typemap_tests PRIVATE typemap_lib)
+
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.7.1  
+)
+FetchContent_MakeAvailable(Catch2)
+
+target_link_libraries(typemap_tests PRIVATE Catch2::Catch2WithMain)
+
+enable_testing()
+add_test(NAME TypemapTests COMMAND typemap_tests)

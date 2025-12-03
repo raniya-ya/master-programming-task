@@ -17,8 +17,6 @@
 
 namespace x3 = boost::spirit::x3;
 
-//определение типов данных для джисон 
-//value - это основной тип, который может хранить ЛЮБОЕ JSON-значение
 namespace json::types
 {
     struct array;
@@ -87,7 +85,6 @@ namespace json::parser
 
     const auto json_def = object | array;
 
-    // Связываем объявления правил с их определениями
     BOOST_SPIRIT_DEFINE(value, array, object, key_value, json, quoted_string)
 }
 
